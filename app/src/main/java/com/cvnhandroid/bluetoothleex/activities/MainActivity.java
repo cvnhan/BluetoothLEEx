@@ -5,11 +5,13 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,14 +27,21 @@ import com.cvnhandroid.bluetoothleex.util.BluetoothLeScanner;
 import com.cvnhandroid.bluetoothleex.util.BluetoothUtils;
 import com.cvnhandroid.bluetoothlelibrary.device.BluetoothLeDevice;
 import com.cvnhandroid.bluetoothlelibrary.device.beacon.ibeacon.IBeaconDevice;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
+
+import java.util.UUID;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import uk.co.alt236.easycursor.objectcursor.EasyObjectCursor;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+    private static final String TAG = MainActivity.class.getName();
     @Bind(R.id.tvBluetoothLe)
     protected TextView mTvBluetoothLeStatus;
     @Bind(R.id.tvBluetoothStatus)
@@ -43,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     protected ListView mList;
     @Bind(android.R.id.empty)
     protected View mEmpty;
+    Firebase myFirebaseRef;
 
     public static Bus bus = new Bus();
     private BluetoothUtils mBluetoothUtils;
@@ -97,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Firebase.setAndroidContext(this);
+        myFirebaseRef = new Firebase("https://crackling-inferno-3353.firebaseio.com/");
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         mList.setEmptyView(mEmpty);
@@ -201,6 +213,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mScanner.scanLeDevice(-1, true);
             invalidateOptionsMenu();
         }
+
+        myFirebaseRef.child(getUniquePsuedoID()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                Log.e(TAG, "onDataChange: " + snapshot.getValue());
+                if (snapshot.getValue() != null && snapshot.getValue().toString().equals("checked")==false) {
+                    Toast.makeText(MainActivity.this, snapshot.getValue().toString(), Toast.LENGTH_SHORT).show();
+                    myFirebaseRef.child(getUniquePsuedoID()).setValue("checked");
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError error) {
+            }
+        });
     }
 
     private void stopScan(){
@@ -218,6 +245,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Subscribe
     public void DetectIMMEDIATEBLE(IBeaconDevice iBeacon){
         Toast.makeText(MainActivity.this, iBeacon.getAddress(), Toast.LENGTH_SHORT).show();
+        myFirebaseRef.child(iBeacon.getAddress()).setValue(getUniquePsuedoID());
         stopScan();
     }
+
+    public static String getUniquePsuedoID() {
+        String m_szDevIDShort = "35" + Build.BOARD.length() % 10 + Build.BRAND.length() % 10 + Build.DEVICE.length() % 10 + Build.MANUFACTURER.length() % 10 + Build.MODEL.length() % 10 + Build.PRODUCT.length() % 10;
+        String serial = null;
+
+        try {
+            serial = Build.class.getField("SERIAL").get((Object) null).toString();
+            return (new UUID((long) m_szDevIDShort.hashCode(), (long) serial.hashCode())).toString();
+        } catch (Exception var3) {
+            serial = "tale";
+            return (new UUID((long) m_szDevIDShort.hashCode(), (long) serial.hashCode())).toString();
+        }
+    }
+
 }
