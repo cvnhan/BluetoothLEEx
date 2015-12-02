@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.cvnhandroid.bluetoothleex.R;
 import com.cvnhandroid.bluetoothleex.adapters.LeDeviceListAdapter;
@@ -23,6 +24,9 @@ import com.cvnhandroid.bluetoothleex.containers.BluetoothLeDeviceStore;
 import com.cvnhandroid.bluetoothleex.util.BluetoothLeScanner;
 import com.cvnhandroid.bluetoothleex.util.BluetoothUtils;
 import com.cvnhandroid.bluetoothlelibrary.device.BluetoothLeDevice;
+import com.cvnhandroid.bluetoothlelibrary.device.beacon.ibeacon.IBeaconDevice;
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -40,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Bind(android.R.id.empty)
     protected View mEmpty;
 
+    public static Bus bus = new Bus();
     private BluetoothUtils mBluetoothUtils;
     private BluetoothLeScanner mScanner;
     private LeDeviceListAdapter mLeDeviceListAdapter;
@@ -90,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     @Override
-    protected void onCreate(final Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
@@ -142,8 +147,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 startScan();
                 break;
             case R.id.menu_stop:
-                mScanner.scanLeDevice(-1, false);
-                invalidateOptionsMenu();
+                stopScan();
                 break;
             case R.id.menu_about:
                 displayAboutDialog();
@@ -155,14 +159,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         mScanner.scanLeDevice(-1, false);
+        bus.unregister(this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        bus.register(this);
         final boolean mIsBluetoothOn = mBluetoothUtils.isBluetoothOn();
         final boolean mIsBluetoothLePresent = mBluetoothUtils.isBluetoothLeSupported();
 
@@ -197,6 +203,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
+    private void stopScan(){
+        mScanner.scanLeDevice(-1, false);
+        invalidateOptionsMenu();
+    }
+
     private void updateItemCount(final int count) {
         mTvItemCount.setText(
                 getString(
@@ -204,4 +215,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         String.valueOf(count)));
     }
 
+    @Subscribe
+    public void DetectIMMEDIATEBLE(IBeaconDevice iBeacon){
+        Toast.makeText(MainActivity.this, iBeacon.getAddress(), Toast.LENGTH_SHORT).show();
+        stopScan();
+    }
 }

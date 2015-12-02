@@ -9,11 +9,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.cvnhandroid.bluetoothleex.R;
+import com.cvnhandroid.bluetoothleex.activities.MainActivity;
 import com.cvnhandroid.bluetoothleex.util.Constants;
 import com.cvnhandroid.bluetoothlelibrary.device.BluetoothLeDevice;
 import com.cvnhandroid.bluetoothlelibrary.device.beacon.BeaconType;
 import com.cvnhandroid.bluetoothlelibrary.device.beacon.BeaconUtils;
 import com.cvnhandroid.bluetoothlelibrary.device.beacon.ibeacon.IBeaconDevice;
+import com.cvnhandroid.bluetoothlelibrary.device.beacon.ibeacon.IBeaconDistanceDescriptor;
 
 import uk.co.alt236.easycursor.objectcursor.EasyObjectCursor;
 
@@ -92,6 +94,9 @@ public class LeDeviceListAdapter extends SimpleCursorAdapter {
             viewHolder.ibeaconDistance.setText(
                     mActivity.getString(R.string.formatter_meters, accuracy));
             viewHolder.ibeaconDistanceDescriptor.setText(iBeacon.getDistanceDescriptor().toString());
+            if(iBeacon.getDistanceDescriptor()== IBeaconDistanceDescriptor.IMMEDIATE){
+                MainActivity.bus.post(iBeacon);
+            }
         } else {
             viewHolder.deviceIcon.setImageResource(R.drawable.ic_bluetooth);
             viewHolder.ibeaconSection.setVisibility(View.GONE);
