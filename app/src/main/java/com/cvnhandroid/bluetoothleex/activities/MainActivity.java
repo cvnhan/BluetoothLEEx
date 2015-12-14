@@ -245,6 +245,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Subscribe
     public void DetectIMMEDIATEBLE(IBeaconDevice iBeacon){
         Toast.makeText(MainActivity.this, iBeacon.getAddress(), Toast.LENGTH_SHORT).show();
+        Log.e(TAG, "DetectIMMEDIATEBLE: MAC: " + iBeacon.getAddress());
+        Log.e(TAG, "DetectIMMEDIATEBLE: UUID: " + iBeacon.getUUID());
+        Log.e(TAG, "DetectIMMEDIATEBLE: Major: " + iBeacon.getMajor());
+        Log.e(TAG, "DetectIMMEDIATEBLE: Minor: " + iBeacon.getMinor());
+
         myFirebaseRef.child(iBeacon.getAddress()).setValue(getUniquePsuedoID());
         stopScan();
     }
