@@ -25,7 +25,7 @@ public class BluetoothLeScanner {
             if (mScanning) {
                 return;
             }
-            Log.d("TAG", "~ Starting Scan");
+            Log.e("TAG", "~ Starting Scan");
             // Stops scanning after a pre-defined scan period.
             if (duration > 0) {
                 mHandler.postDelayed(new Runnable() {
@@ -40,7 +40,7 @@ public class BluetoothLeScanner {
             mScanning = true;
             mBluetoothUtils.getBluetoothAdapter().startLeScan(mLeScanCallback);
         } else {
-            Log.d("TAG", "~ Stopping Scan");
+            Log.e("TAG", "~ Stopping Scan");
             mScanning = false;
             mBluetoothUtils.getBluetoothAdapter().stopLeScan(mLeScanCallback);
         }

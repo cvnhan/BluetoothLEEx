@@ -26,6 +26,8 @@ import com.cvnhandroid.bluetoothleex.containers.BluetoothLeDeviceStore;
 import com.cvnhandroid.bluetoothleex.util.BluetoothLeScanner;
 import com.cvnhandroid.bluetoothleex.util.BluetoothUtils;
 import com.cvnhandroid.bluetoothlelibrary.device.BluetoothLeDevice;
+import com.cvnhandroid.bluetoothlelibrary.device.beacon.BeaconType;
+import com.cvnhandroid.bluetoothlelibrary.device.beacon.BeaconUtils;
 import com.cvnhandroid.bluetoothlelibrary.device.beacon.ibeacon.IBeaconDevice;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -65,16 +67,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
 
             final BluetoothLeDevice deviceLe = new BluetoothLeDevice(device, rssi, scanRecord, System.currentTimeMillis());
-            mDeviceStore.addDevice(deviceLe);
-            final EasyObjectCursor<BluetoothLeDevice> c = mDeviceStore.getDeviceCursor();
+            final boolean isIBeacon = BeaconUtils.getBeaconType(deviceLe) == BeaconType.IBEACON;
+            if(isIBeacon) {
+                mDeviceStore.addDevice(deviceLe);
+                final EasyObjectCursor<BluetoothLeDevice> c = mDeviceStore.getDeviceCursor();
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mLeDeviceListAdapter.swapCursor(c);
-                    updateItemCount(mLeDeviceListAdapter.getCount());
-                }
-            });
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLeDeviceListAdapter.swapCursor(c);
+                        updateItemCount(mLeDeviceListAdapter.getCount());
+                    }
+                });
+            }
         }
     };
 
@@ -244,14 +249,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Subscribe
     public void DetectIMMEDIATEBLE(IBeaconDevice iBeacon){
-        Toast.makeText(MainActivity.this, iBeacon.getAddress(), Toast.LENGTH_SHORT).show();
-        Log.e(TAG, "DetectIMMEDIATEBLE: MAC: " + iBeacon.getAddress());
-        Log.e(TAG, "DetectIMMEDIATEBLE: UUID: " + iBeacon.getUUID());
-        Log.e(TAG, "DetectIMMEDIATEBLE: Major: " + iBeacon.getMajor());
-        Log.e(TAG, "DetectIMMEDIATEBLE: Minor: " + iBeacon.getMinor());
-
-        myFirebaseRef.child(iBeacon.getAddress()).setValue(getUniquePsuedoID());
-        stopScan();
+//        Toast.makeText(MainActivity.this, iBeacon.getAddress(), Toast.LENGTH_SHORT).show();
+//        Log.e(TAG, "DetectIMMEDIATEBLE: MAC: " + iBeacon.getAddress());
+//        Log.e(TAG, "DetectIMMEDIATEBLE: UUID: " + iBeacon.getUUID());
+//        Log.e(TAG, "DetectIMMEDIATEBLE: Major: " + iBeacon.getMajor());
+//        Log.e(TAG, "DetectIMMEDIATEBLE: Minor: " + iBeacon.getMinor());
+//        myFirebaseRef.child(iBeacon.getAddress()).setValue(getUniquePsuedoID());
+//        stopScan();
     }
 
     public static String getUniquePsuedoID() {
